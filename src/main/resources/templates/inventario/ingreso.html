@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+<head>
+    <meta charset="UTF-8">
+    <title>CARVIMSA - Registrar Ingreso</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+</head>
+<body>
+<div class="layout">
+    <div th:replace="~{fragments/layout :: sidebar(activo='ingresos')}"></div>
+
+    <main class="main-content">
+        <div th:replace="~{fragments/layout :: topbar(titulo='Registrar Ingreso de Inventario')}"></div>
+
+        <div class="content">
+            <div class="alert-msg alert-success" th:if="${mensajeExito}" th:text="${mensajeExito}"></div>
+            <div class="alert-msg alert-error" th:if="${mensajeError}" th:text="${mensajeError}"></div>
+
+            <div class="content-columns">
+                <div class="col-main">
+                    <form th:action="@{/ingresos/guardar}" th:object="${movimiento}" method="post">
+                        <div class="form-card">
+                            <h3>Nueva entrada de inventario</h3>
+
+                            <div class="form-group">
+                                <label for="producto">Producto *</label>
+                                <select id="producto" name="producto.id" required onchange="actualizarStock()">
+                                    <option value="" disabled selected>Seleccionar producto...</option>
+                                    <option th:each="p : ${productos}"
+                                            th:value="${p.id}"
+                                            th:text="${p.nombre}"
+                                            th:data-stock="${p.stockActual}"
+                                            th:data-minimo="${p.stockMinimo}"
+                                            th:data-unidad="${p.unidadMedida}">
+                                    </option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="proveedor">Proveedor *</label>
+                                <select id="proveedor" name="proveedor.id" required>
+                                    <option value="" disabled selected>Seleccionar proveedor...</option>
+                                    <option th:each="prov : ${proveedores}" th:value="${prov.id}" th:text="${prov.nombre}"></option>
+                                </select>
+                            </div>
+
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label for="cantidad">Cantidad *</label>
+                                    <input type="number" id="cantidad" th:field="*{cantidad}" min="1" placeholder="Ej. 200" required oninput="actualizarStock()">
+                                </div>
+                                <div class="form-group">
+                                    <label for="fecha">Fecha *</label>
+                                    <input type="date" id="fecha" th:field="*{fecha}" required>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="unidadMedida">Unidad de medida</label>
+                                <input type="text" id="unidadMedida" placeholder="kg, unidades, rollos..." readonly>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="observaciones">Observaciones</label>
+                                <textarea id="observaciones" th:field="*{observaciones}" rows="2" placeholder="Opcional..."></textarea>
+                            </div>
+                        </div>
+
+                        <div class="form-actions">
+                            <a class="btn btn-outline" th:href="@{/dashboard}">Cancelar</a>
+                            <button type="submit" class="btn btn-success">Guardar ingreso</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="col-side">
+                    <div class="side-card">
+                        <div class="side-label">Stock actual del producto</div>
+                        <div class="side-number" id="stockActual">--</div>
+                        <div class="side-sub" id="unidadDisponible">disponibles</div>
+                        <div class="side-min" id="stockMinimo">Mínimo: -- </div>
+                        <div class="side-result" id="stockResultado">Tras ingreso: --</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script th:inline="javascript">
+    function actualizarStock() {
+        const select = document.getElementById('producto');
+        const opcion = select.options[select.selectedIndex];
+        const cantidad = parseInt(document.getElementById('cantidad').value) || 0;
+
+        if (!opcion || !opcion.value) {
+            return;
+        }
+
+        const stock = parseInt(opcion.getAttribute('data-stock')) || 0;
+        const minimo = parseInt(opcion.getAttribute('data-minimo')) || 0;
+        const unidad = opcion.getAttribute('data-unidad') || '';
+
+        document.getElementById('stockActual').textContent = stock;
+        document.getElementById('unidadDisponible').textContent = unidad + ' disponibles';
+        document.getElementById('stockMinimo').textContent = 'Mínimo: ' + minimo + ' ' + unidad;
+        document.getElementById('stockResultado').textContent =
+            'Tras ingreso: ' + stock + ' + ' + cantidad + ' = ' + (stock + cantidad) + ' ' + unidad;
+        document.getElementById('unidadMedida').value = unidad;
+    }
+</script>
+</body>
+</html>

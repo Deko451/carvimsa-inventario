@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+<head>
+    <meta charset="UTF-8">
+    <title>CARVIMSA - Registrar Salida</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+</head>
+<body>
+<div class="layout">
+    <div th:replace="~{fragments/layout :: sidebar(activo='salidas')}"></div>
+
+    <main class="main-content">
+        <div th:replace="~{fragments/layout :: topbar(titulo='Registrar Salida de Inventario')}"></div>
+
+        <div class="content">
+            <div class="alert-msg alert-success" th:if="${mensajeExito}" th:text="${mensajeExito}"></div>
+            <div class="alert-msg alert-error" th:if="${mensajeError}" th:text="${mensajeError}"></div>
+
+            <div class="content-columns">
+                <div class="col-main">
+                    <form th:action="@{/salidas/guardar}" th:object="${movimiento}" method="post">
+                        <div class="form-card">
+                            <h3>Nueva salida de inventario</h3>
+
+                            <div class="form-group">
+                                <label>Destino *</label>
+                                <div class="toggle-group">
+                                    <button type="button" class="toggle-btn active" id="btnProduccion" onclick="seleccionarDestino('Producción')">Producción</button>
+                                    <button type="button" class="toggle-btn" id="btnDespacho" onclick="seleccionarDestino('Despacho a cliente')">Despacho a cliente</button>
+                                </div>
+                                <input type="hidden" id="destino" name="destino" value="Producción">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="producto">Producto *</label>
+                                <select id="producto" name="producto.id" required onchange="actualizarStock()">
+                                    <option value="" disabled selected>Seleccionar producto...</option>
+                                    <option th:each="p : ${productos}"
+                                            th:value="${p.id}"
+                                            th:text="${p.nombre}"
+                                            th:data-stock="${p.stockActual}"
+                                            th:data-minimo="${p.stockMinimo}"
+                                            th:data-unidad="${p.unidadMedida}">
+                                    </option>
+                                </select>
+                            </div>
+
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label for="cantidad">Cantidad *</label>
+                                    <input type="number" id="cantidad" th:field="*{cantidad}" min="1" placeholder="Ej. 50" required oninput="actualizarStock()">
+                                </div>
+                                <div class="form-group">
+                                    <label for="fecha">Fecha *</label>
+                                    <input type="date" id="fecha" th:field="*{fecha}" required>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="observaciones">Observaciones</label>
+                                <textarea id="observaciones" th:field="*{observaciones}" rows="2" placeholder="Opcional..."></textarea>
+                            </div>
+                        </div>
+
+                        <div class="form-actions">
+                            <a class="btn btn-outline" th:href="@{/dashboard}">Cancelar</a>
+                            <button type="submit" class="btn btn-danger">Guardar salida</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="col-side">
+                    <div class="side-card" id="tarjetaStock" style="display:none;">
+                        <div class="side-label" id="tituloTarjeta">Stock disponible</div>
+                        <div class="side-number" id="stockActual">--</div>
+                        <div class="side-sub" id="unidadDisponible">disponible ahora</div>
+                        <div class="side-min" id="stockMinimo">Mínimo requerido: --</div>
+                        <div class="side-result" id="mensajeAlerta"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script th:inline="javascript">
+    function seleccionarDestino(destino) {
+        document.getElementById('destino').value = destino;
+        document.getElementById('btnProduccion').classList.toggle('active', destino === 'Producción');
+        document.getElementById('btnDespacho').classList.toggle('active', destino === 'Despacho a cliente');
+    }
+
+    function actualizarStock() {
+        const select = document.getElementById('producto');
+        const opcion = select.options[select.selectedIndex];
+        const tarjeta = document.getElementById('tarjetaStock');
+
+        if (!opcion || !opcion.value) {
+            tarjeta.style.display = 'none';
+            return;
+        }
+
+        const stock = parseInt(opcion.getAttribute('data-stock')) || 0;
+        const minimo = parseInt(opcion.getAttribute('data-minimo')) || 0;
+        const unidad = opcion.getAttribute('data-unidad') || '';
+        const cantidad = parseInt(document.getElementById('cantidad').value) || 0;
+        const stockTrasSalida = stock - cantidad;
+
+        tarjeta.style.display = 'block';
+        document.getElementById('stockActual').textContent = stock;
+        document.getElementById('unidadDisponible').textContent = unidad + ' disponible ahora';
+        document.getElementById('stockMinimo').textContent = 'Mínimo requerido: ' + minimo + ' ' + unidad;
+
+        if (stockTrasSalida < minimo) {
+            tarjeta.classList.add('side-warning');
+            document.getElementById('tituloTarjeta').textContent = '⚠ Stock cercano al mínimo';
+            document.getElementById('mensajeAlerta').textContent =
+                'Al guardar se generará una alerta de stock mínimo automáticamente.';
+        } else {
+            tarjeta.classList.remove('side-warning');
+            document.getElementById('tituloTarjeta').textContent = 'Stock disponible';
+            document.getElementById('mensajeAlerta').textContent = '';
+        }
+    }
+</script>
+</body>
+</html>

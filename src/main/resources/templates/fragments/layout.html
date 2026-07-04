@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+<body>
+
+<div th:fragment="sidebar(activo)" th:remove="tag">
+    <aside class="sidebar">
+        <div class="brand">
+            <h1>CARVIMSA</h1>
+            <p>Sistema de Inventarios</p>
+        </div>
+        <nav>
+            <a th:href="@{/dashboard}" th:classappend="${activo == 'dashboard'} ? 'active'"><span class="dot"></span>Dashboard</a>
+            <a th:href="@{/ingresos/nuevo}" th:classappend="${activo == 'ingresos'} ? 'active'"><span class="dot"></span>Ingresos</a>
+            <a th:href="@{/salidas/nuevo}" th:classappend="${activo == 'salidas'} ? 'active'"><span class="dot"></span>Salidas</a>
+            <a th:href="@{/stock}" th:classappend="${activo == 'stock'} ? 'active'"><span class="dot"></span>Stock</a>
+            <a th:href="@{/pedidos/nuevo}" th:classappend="${activo == 'pedidos'} ? 'active'"><span class="dot"></span>Pedidos</a>
+            <a th:href="@{/alertas}" th:classappend="${activo == 'alertas'} ? 'active'" sec:authorize="hasAnyRole('Jefe','Administrador')"><span class="dot"></span>Alertas</a>
+            <a th:href="@{/reportes}" th:classappend="${activo == 'reportes'} ? 'active'" sec:authorize="hasAnyRole('Jefe','Administrador')"><span class="dot"></span>Reportes</a>
+            <a th:href="@{/admin/proveedores}" th:classappend="${activo == 'proveedores'} ? 'active'" sec:authorize="hasRole('Administrador')"><span class="dot"></span>Proveedores</a>
+            <a th:href="@{/admin/productos}" th:classappend="${activo == 'productos'} ? 'active'" sec:authorize="hasRole('Administrador')"><span class="dot"></span>Productos</a>
+            <a th:href="@{/admin/usuarios}" th:classappend="${activo == 'usuarios'} ? 'active'" sec:authorize="hasRole('Administrador')"><span class="dot"></span>Usuarios</a>
+        </nav>
+    </aside>
+</div>
+
+<div th:fragment="topbar(titulo)" th:remove="tag">
+    <header class="topbar">
+        <h2 th:text="${titulo}">Título</h2>
+        <div class="user-info">
+            <div class="avatar"></div>
+            <div>
+                <div class="name" th:text="${usuarioActual != null ? usuarioActual.nombreCompleto : #authentication.name}">Usuario</div>
+                <div class="role" th:text="${usuarioActual != null ? usuarioActual.rolEtiqueta : ''}">Rol</div>
+            </div>
+            <form th:action="@{/logout}" method="post" style="margin:0;">
+                <button type="submit" class="logout-link" style="background:none;border:none;cursor:pointer;font:inherit;padding:0;">Cerrar sesión</button>
+            </form>
+        </div>
+    </header>
+</div>
+
+</body>
+</html>

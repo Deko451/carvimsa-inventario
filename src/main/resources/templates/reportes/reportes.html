@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+<head>
+    <meta charset="UTF-8">
+    <title>CARVIMSA - Generar Reportes</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+</head>
+<body>
+<div class="layout">
+    <div th:replace="~{fragments/layout :: sidebar(activo='reportes')}"></div>
+
+    <main class="main-content">
+        <div th:replace="~{fragments/layout :: topbar(titulo='Generar Reportes')}"></div>
+
+        <div class="content">
+            <form th:action="@{/reportes/generar}" method="post">
+                <div class="form-card">
+                    <h3>Configurar reporte</h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="tipo">Tipo de reporte</label>
+                            <select id="tipo" name="tipo">
+                                <option th:each="t : ${tipos}" th:value="${t}" th:text="${t}"
+                                        th:selected="${tipoSeleccionado != null and tipoSeleccionado == t}"></option>
+                            </select>
+                        </div>
+                        <div></div>
+                        <div class="form-group">
+                            <label for="fechaInicio">Fecha inicio</label>
+                            <input type="date" id="fechaInicio" name="fechaInicio"
+                                   th:value="${fechaInicio != null ? fechaInicio : fechaHoy}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="fechaFin">Fecha fin</label>
+                            <input type="date" id="fechaFin" name="fechaFin"
+                                   th:value="${fechaFin != null ? fechaFin : fechaHoy}" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Generar reporte</button>
+                </div>
+            </form>
+
+            <div th:if="${resultados != null}">
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                        <tr>
+                            <th>Producto</th>
+                            <th>Entradas</th>
+                            <th>Salidas</th>
+                            <th>Saldo neto</th>
+                            <th>Fecha último mov.</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="r : ${resultados}">
+                            <td th:text="${r.producto().nombre}">Producto</td>
+                            <td th:text="${'+' + r.entradas() + ' ' + r.producto().unidadMedida}">+800 kg</td>
+                            <td th:text="${'-' + r.salidas() + ' ' + r.producto().unidadMedida}">-420 kg</td>
+                            <td th:class="${r.saldoNeto() >= 0} ? 'text-success' : 'text-danger'"
+                                th:text="${(r.saldoNeto() >= 0 ? '+' : '') + r.saldoNeto() + ' ' + r.producto().unidadMedida}">+380 kg</td>
+                            <td th:text="${r.fechaUltimoMovimiento() != null ? #temporals.format(r.fechaUltimoMovimiento(), 'dd/MM/yyyy') : '-'}">-</td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(resultados)}">
+                            <td colspan="5">No se encontraron movimientos en el rango seleccionado.</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="actions-row" style="margin-top: 24px;">
+                    <button type="button" class="btn btn-danger">Exportar PDF</button>
+                    <button type="button" class="btn btn-success">Exportar Excel</button>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+</body>
+</html>

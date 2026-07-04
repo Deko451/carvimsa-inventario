@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+<head>
+    <meta charset="UTF-8">
+    <title>CARVIMSA - Gestión de Alertas</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+</head>
+<body>
+<div class="layout">
+    <div th:replace="~{fragments/layout :: sidebar(activo='alertas')}"></div>
+
+    <main class="main-content">
+        <div th:replace="~{fragments/layout :: topbar(titulo='Gestión de Alertas')}"></div>
+
+        <div class="content">
+            <div class="alert-msg alert-success" th:if="${mensajeExito}" th:text="${mensajeExito}"></div>
+
+            <div class="kpi-row">
+                <div class="kpi-card kpi-danger">
+                    <div class="kpi-number" th:text="${totalActivas}">5</div>
+                    <div class="kpi-label">Alertas activas</div>
+                </div>
+                <div class="kpi-card kpi-warning">
+                    <div class="kpi-number" th:text="${sinResolver48h}">3</div>
+                    <div class="kpi-label">Sin resolver +48h</div>
+                </div>
+                <div class="kpi-card kpi-success">
+                    <div class="kpi-number" th:text="${resueltasEsteMes}">12</div>
+                    <div class="kpi-label">Resueltas este mes</div>
+                </div>
+            </div>
+
+            <div class="table-wrap table-danger">
+                <table>
+                    <thead>
+                    <tr>
+                        <th>Producto</th>
+                        <th>Stock actual</th>
+                        <th>Mínimo</th>
+                        <th>Diferencia</th>
+                        <th>Activada</th>
+                        <th>Acción</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="a : ${alertasActivas}">
+                        <td th:text="${a.producto.nombre}">Producto</td>
+                        <td th:text="${a.stockAlMomento + ' ' + a.producto.unidadMedida}">80 rollos</td>
+                        <td th:text="${a.stockMinimo + ' ' + a.producto.unidadMedida}">200 rollos</td>
+                        <td class="text-danger" th:text="${a.diferencia}">-120</td>
+                        <td th:text="${#temporals.format(a.fechaActivacion, 'dd/MM/yyyy')}">04/07/2026</td>
+                        <td>
+                            <form th:action="@{/alertas/resolver/{id}(id=${a.id})}" method="post">
+                                <button type="submit" class="btn btn-danger">Resolver</button>
+                            </form>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+</div>
+</body>
+</html>

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+<head>
+    <meta charset="UTF-8">
+    <title>CARVIMSA - Proveedores</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+</head>
+<body>
+<div class="layout">
+    <div th:replace="~{fragments/layout :: sidebar(activo='proveedores')}"></div>
+
+    <main class="main-content">
+        <div th:replace="~{fragments/layout :: topbar(titulo='Gestión de Proveedores')}"></div>
+
+        <div class="content">
+            <div class="alert-msg alert-success" th:if="${mensajeExito}" th:text="${mensajeExito}"></div>
+            <div class="alert-msg alert-error" th:if="${mensajeError}" th:text="${mensajeError}"></div>
+
+            <form th:action="@{/admin/proveedores/guardar}" th:object="${proveedor}" method="post">
+                <div class="form-card">
+                    <h3>Nuevo proveedor</h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="nombre">Nombre *</label>
+                            <input type="text" id="nombre" th:field="*{nombre}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="ruc">RUC *</label>
+                            <input type="text" id="ruc" th:field="*{ruc}" maxlength="11" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="contacto">Contacto</label>
+                            <input type="text" id="contacto" th:field="*{contacto}">
+                        </div>
+                        <div class="form-group">
+                            <label for="direccion">Dirección</label>
+                            <input type="text" id="direccion" th:field="*{direccion}">
+                        </div>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Guardar proveedor</button>
+                </div>
+            </form>
+
+            <h3 class="section-title">Proveedores registrados</h3>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                    <tr>
+                        <th>Nombre</th>
+                        <th>RUC</th>
+                        <th>Contacto</th>
+                        <th>Dirección</th>
+                        <th>Estado</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="p : ${proveedores}">
+                        <td th:text="${p.nombre}">Proveedor</td>
+                        <td th:text="${p.ruc}">20512345678</td>
+                        <td th:text="${p.contacto}">-</td>
+                        <td th:text="${p.direccion}">-</td>
+                        <td>
+                            <span th:if="${p.estado}" class="badge badge-ok">Activo</span>
+                            <span th:unless="${p.estado}" class="badge badge-bajo">Inactivo</span>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+</div>
+</body>
+</html>

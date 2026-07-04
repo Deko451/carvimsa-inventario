@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+<head>
+    <meta charset="UTF-8">
+    <title>CARVIMSA - Dashboard</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+</head>
+<body>
+<div class="layout">
+    <div th:replace="~{fragments/layout :: sidebar(activo='dashboard')}"></div>
+
+    <main class="main-content">
+        <div th:replace="~{fragments/layout :: topbar(titulo='Dashboard')}"></div>
+
+        <div class="content">
+            <div class="kpi-row">
+                <div class="kpi-card">
+                    <div class="kpi-number" th:text="${productosActivos}">124</div>
+                    <div class="kpi-label">Productos activos</div>
+                    <div class="kpi-sub">+3 esta semana</div>
+                </div>
+                <div class="kpi-card kpi-success">
+                    <div class="kpi-number" th:text="${movimientosHoy}">18</div>
+                    <div class="kpi-label">Movimientos hoy</div>
+                    <div class="kpi-sub">Entradas y salidas de hoy</div>
+                </div>
+                <div class="kpi-card kpi-danger">
+                    <div class="kpi-number" th:text="${alertasActivas}">5</div>
+                    <div class="kpi-label">Alertas activas</div>
+                    <div class="kpi-sub">Stock bajo mínimo</div>
+                </div>
+                <div class="kpi-card kpi-warning">
+                    <div class="kpi-number" th:text="${pedidosPendientes}">8</div>
+                    <div class="kpi-label">Pedidos pendientes</div>
+                    <div class="kpi-sub">Por despachar</div>
+                </div>
+            </div>
+
+            <h3 class="section-title">Acciones rápidas</h3>
+            <div class="actions-row">
+                <a class="btn btn-success" th:href="@{/ingresos/nuevo}">Registrar Ingreso</a>
+                <a class="btn btn-danger" th:href="@{/salidas/nuevo}">Registrar Salida</a>
+                <a class="btn btn-primary" th:href="@{/pedidos/nuevo}">Registrar Pedido</a>
+            </div>
+
+            <h3 class="section-title">Últimos movimientos</h3>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                    <tr>
+                        <th>Producto</th>
+                        <th>Tipo</th>
+                        <th>Cantidad</th>
+                        <th>Usuario</th>
+                        <th>Fecha</th>
+                        <th>Estado</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="mov : ${ultimosMovimientos}">
+                        <td th:text="${mov.producto.nombre}">Producto</td>
+                        <td>
+                            <span th:if="${mov.tipo.name() == 'ENTRADA'}" class="badge badge-entrada">ENTRADA</span>
+                            <span th:if="${mov.tipo.name() == 'SALIDA'}" class="badge badge-salida">SALIDA</span>
+                        </td>
+                        <td th:text="${mov.cantidad + ' ' + mov.producto.unidadMedida}">200 kg</td>
+                        <td th:text="${mov.usuario.nombreCompleto}">Usuario</td>
+                        <td th:text="${#temporals.format(mov.fecha, 'dd/MM/yyyy')}">04/07/2026</td>
+                        <td>
+                            <span th:if="${mov.tipo.name() == 'SALIDA' and mov.producto.stockBajo}" class="badge badge-alerta">⚠ ALERTA</span>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+</div>
+</body>
+</html>

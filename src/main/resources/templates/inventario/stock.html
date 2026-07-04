@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+<head>
+    <meta charset="UTF-8">
+    <title>CARVIMSA - Consultar Stock</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+</head>
+<body>
+<div class="layout">
+    <div th:replace="~{fragments/layout :: sidebar(activo='stock')}"></div>
+
+    <main class="main-content">
+        <div th:replace="~{fragments/layout :: topbar(titulo='Consultar Stock')}"></div>
+
+        <div class="content">
+            <div class="filter-row">
+                <div class="search-box">
+                    <span class="icon">🔍</span>
+                    <input type="text" id="buscador" placeholder="Buscar producto..." oninput="filtrar()">
+                </div>
+                <button type="button" class="filter-btn active" data-tipo="TODOS" onclick="setFiltro('TODOS', this)">Todos</button>
+                <button type="button" class="filter-btn" data-tipo="MP" onclick="setFiltro('MP', this)">MP</button>
+                <button type="button" class="filter-btn" data-tipo="PP" onclick="setFiltro('PP', this)">PP</button>
+                <button type="button" class="filter-btn" data-tipo="PT" onclick="setFiltro('PT', this)">PT</button>
+            </div>
+
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                    <tr>
+                        <th>Código</th>
+                        <th>Producto</th>
+                        <th>Tipo</th>
+                        <th>Stock actual</th>
+                        <th>Stock mínimo</th>
+                        <th>Estado</th>
+                    </tr>
+                    </thead>
+                    <tbody id="cuerpoTabla">
+                    <tr th:each="p : ${productos}" th:data-tipo="${p.tipo.name()}" th:data-nombre="${#strings.toLowerCase(p.nombre)}">
+                        <td th:text="${p.codigo}">C-001</td>
+                        <td th:text="${p.nombre}">Producto</td>
+                        <td th:text="${p.tipo.name()}">MP</td>
+                        <td th:class="${p.stockBajo} ? 'text-danger'"
+                            th:text="${p.stockActual + ' ' + p.unidadMedida}">320 kg</td>
+                        <td th:text="${p.stockMinimo + ' ' + p.unidadMedida}">150 kg</td>
+                        <td>
+                            <span th:if="${p.stockBajo}" class="badge badge-bajo">BAJO</span>
+                            <span th:unless="${p.stockBajo}" class="badge badge-ok">OK</span>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script th:inline="javascript">
+    let filtroTipo = 'TODOS';
+
+    function setFiltro(tipo, boton) {
+        filtroTipo = tipo;
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        boton.classList.add('active');
+        filtrar();
+    }
+
+    function filtrar() {
+        const texto = document.getElementById('buscador').value.toLowerCase();
+        document.querySelectorAll('#cuerpoTabla tr').forEach(fila => {
+            const tipo = fila.getAttribute('data-tipo');
+            const nombre = fila.getAttribute('data-nombre');
+            const coincideTipo = filtroTipo === 'TODOS' || tipo === filtroTipo;
+            const coincideTexto = nombre.includes(texto);
+            fila.style.display = (coincideTipo && coincideTexto) ? '' : 'none';
+        });
+    }
+</script>
+</body>
+</html>
