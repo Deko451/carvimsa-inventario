@@ -1,16 +1,39 @@
 # CARVIMSA — Sistema de Gestión de Inventarios
 
-Proyecto Spring Boot generado según `CARVIMSA_PROYECTO.md` e `INSTRUCCIONES_CLAUDE_CODE.md`
-(ADSI, UTP, Sección 18164, Grupo 06).
+Sistema web de gestión de inventarios para CARVIMSA (Cartones Villa Marina S.A.), una empresa
+peruana del sector manufacturero de cartones y empaques. Controla el inventario de materias primas,
+productos en proceso y productos terminados, con roles diferenciados, registro de movimientos y
+alertas automáticas por stock mínimo.
+
+Proyecto desarrollado para el curso de Análisis y Diseño de Sistemas de Información (ADSI) —
+Universidad Tecnológica del Perú (UTP), Sección 18164, Grupo 06.
 
 ## Stack
 
 Java 17 · Spring Boot 3.5 · Spring MVC · Thymeleaf · Spring Data JPA · Spring Security · MySQL 8.0 · Maven
 
+## Funcionalidades
+
+| Módulo | Descripción | Rol requerido |
+|---|---|---|
+| Login | Autenticación por usuario/contraseña (BCrypt) | Todos |
+| Dashboard | KPIs (productos activos, movimientos del día, alertas, pedidos pendientes) y últimos movimientos | Todos |
+| Registrar Ingreso | Alta de stock por compra/recepción de proveedor | Operario, Jefe, Administrador |
+| Registrar Salida | Baja de stock por producción o despacho a cliente | Operario, Jefe, Administrador |
+| Consultar Stock | Listado filtrable por tipo (MP/PP/PT) con estado OK/BAJO | Operario, Jefe, Administrador |
+| Registrar Pedido | Pedido de despacho a cliente (genera automáticamente una salida) | Operario, Jefe, Administrador |
+| Gestionar Alertas | Alertas activas por stock bajo mínimo, con resolución manual | Jefe, Administrador |
+| Generar Reportes | Reporte de movimientos por producto (entradas, salidas, saldo neto) en un rango de fechas | Jefe, Administrador |
+| Gestionar Productos/Proveedores/Usuarios | Alta de catálogos maestros | Administrador |
+
+**Regla de negocio crítica:** al registrar una salida, si el stock resultante cae por debajo del
+stock mínimo del producto, el sistema crea automáticamente una alerta en estado `ACTIVA`
+(`InventarioService.registrarSalida`).
+
 ## Requisitos previos
 
 - Java 17+
-- Maven 3.9+ (o usar el wrapper si se agrega en el futuro)
+- Maven 3.9+
 - MySQL 8.0 corriendo localmente (o accesible por red)
 
 ## Puesta en marcha
@@ -49,25 +72,48 @@ Java 17 · Spring Boot 3.5 · Spring MVC · Thymeleaf · Spring Data JPA · Spri
 
 ## Usuarios de prueba
 
-| Usuario    | Contraseña | Rol            |
-|------------|------------|----------------|
-| admin      | admin123   | Administrador  |
-| jefe       | admin123   | Jefe           |
-| operario   | admin123   | Operario       |
+| Usuario  | Contraseña | Rol           |
+|----------|------------|---------------|
+| admin    | admin123   | Administrador |
+| jefe     | admin123   | Jefe          |
+| operario | admin123   | Operario      |
 
-## Estructura
+## Estructura del proyecto
 
-- `model/` — 9 entidades JPA (Rol, Usuario, Proveedor, Producto, MovimientoInventario, Pedido, DetallePedido, Alerta, Reporte).
-- `repository/` — interfaces Spring Data JPA.
-- `service/` — lógica de negocio (InventarioService implementa la regla crítica de alerta automática en salidas).
-- `config/SecurityConfig.java` — rutas protegidas por rol.
-- `controller/` — un controlador por módulo.
-- `templates/` — vistas Thymeleaf que replican el prototipo Figma (`diagramas/figma_screens/`).
+```
+src/main/java/com/carvimsa/inventario/
+├── controller/   Controladores Spring MVC (uno por módulo)
+├── service/      Lógica de negocio (InventarioService, AlertaService, ReporteService, SeguridadService)
+├── repository/   Interfaces Spring Data JPA
+├── model/        Entidades JPA: Rol, Usuario, Proveedor, Producto, MovimientoInventario,
+│                 Pedido, DetallePedido, Alerta, Reporte
+└── config/       SecurityConfig (rutas protegidas por rol)
 
-## Nota sobre los assets de diseño
+src/main/resources/
+├── application.properties
+├── db/carvimsa_inventario.sql   Script DDL + datos de prueba
+├── static/css/                  Hoja de estilos compartida
+└── templates/                   Vistas Thymeleaf (login, dashboard, inventario/, alertas/, reportes/, pedidos/, admin/)
+```
 
-El archivo `diagramas/figma_screens/07_reportes.png` referenciado en la documentación contiene, en
-realidad, una copia del diseño de `03_registrar_ingreso.png` (asset mal referenciado/duplicado). La
-pantalla de Reportes (`templates/reportes/reportes.html`) se construyó a partir de la descripción
-textual de la Pantalla 7 en `CARVIMSA_PROYECTO.md` (sección 17), no de la imagen. Si tienes la imagen
-correcta de Reportes, avísame para ajustar el layout con precisión visual.
+## Rutas principales
+
+| URL | Método | Rol |
+|---|---|---|
+| `/login` | GET/POST | Todos |
+| `/dashboard` | GET | Todos |
+| `/ingresos/nuevo`, `/ingresos/guardar` | GET, POST | Operario+ |
+| `/salidas/nuevo`, `/salidas/guardar` | GET, POST | Operario+ |
+| `/stock` | GET | Operario+ |
+| `/pedidos/nuevo`, `/pedidos/guardar` | GET, POST | Operario+ |
+| `/alertas`, `/alertas/resolver/{id}` | GET, POST | Jefe+ |
+| `/reportes`, `/reportes/generar` | GET, POST | Jefe+ |
+| `/admin/productos`, `/admin/proveedores`, `/admin/usuarios` | GET | Administrador |
+
+## Notas de desarrollo
+
+- El diseño visual de las pantallas se basó en un prototipo Figma (no incluido en este repositorio).
+  La pantalla de Reportes se construyó a partir de la especificación textual del documento de diseño
+  original, ya que el asset de imagen correspondiente estaba duplicado/mal referenciado.
+- Las fechas en formularios usan `@DateTimeFormat(iso = DateTimeFormat.ISO.DATE)` para ser compatibles
+  con el input nativo `type="date"` de HTML5, independientemente del locale del servidor.
